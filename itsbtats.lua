@@ -1,5 +1,5 @@
 --! ============================================
--- !🥔 سكربت بطاطس للطيران (Potato Fly Script GUI) 
+-- !🥔 سكربت بطاطس للطيران واختراق الجدران V2
 -- !============================================
 --*  @son233       
 -----------------------------------------------*-*---------------------
@@ -8,14 +8,15 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- !إعدادات الطيران 
+-- !إعدادات الطيران واختراق الجدران
 local flying = false
+local noclip = false
 local flySpeed = 50
 local minSpeed = 10
 local maxSpeed = 500
 local speedStep = 10
 
-local bodyVel, bodyGyro, renderConnection
+local bodyVel, bodyGyro, renderConnection, noclipConnection
 
 --  ! اختيار المجلد المناسب للـ GUI (بيدعم كل المشغلات)
 local guiParent
@@ -41,8 +42,8 @@ ScreenGui.Parent = guiParent
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 240, 0, 220)
-MainFrame.Position = UDim2.new(0.5, -120, 0.4, -110)
+MainFrame.Size = UDim2.new(0, 240, 0, 235)
+MainFrame.Position = UDim2.new(0.5, -120, 0.4, -117)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -58,7 +59,7 @@ local Title = Instance.new("TextLabel")
 Title.Name = "Title"
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(211, 134, 11) -- لون بطاطسي ذهبي
-Title.Text = "  V1 🥔 سكربت بطاطس للطيران"
+Title.Text = "  V2 🥔 سكربت بطاطس للطيران"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 16
 Title.Font = Enum.Font.SourceSansBold
@@ -68,15 +69,15 @@ local TitleCorner = Instance.new("UICorner")
 TitleCorner.CornerRadius = UDim.new(0, 12)
 TitleCorner.Parent = Title
 
--- !زر التشغيل والإيقاف
+-- !زر التشغيل والإيقاف للطيران
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Name = "ToggleBtn"
-ToggleBtn.Size = UDim2.new(0.85, 0, 0, 40)
-ToggleBtn.Position = UDim2.new(0.075, 0, 0.23, 0)
+ToggleBtn.Size = UDim2.new(0.85, 0, 0, 36)
+ToggleBtn.Position = UDim2.new(0.075, 0, 0, 48)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
 ToggleBtn.Text = "🚀 تشغيل الطيران"
 ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 16
+ToggleBtn.TextSize = 15
 ToggleBtn.Font = Enum.Font.SourceSansBold
 ToggleBtn.Parent = MainFrame
 
@@ -84,27 +85,43 @@ local ToggleCorner = Instance.new("UICorner")
 ToggleCorner.CornerRadius = UDim.new(0, 8)
 ToggleCorner.Parent = ToggleBtn
 
+-- !زر اختراق الجدران (Noclip)
+local NoclipBtn = Instance.new("TextButton")
+NoclipBtn.Name = "NoclipBtn"
+NoclipBtn.Size = UDim2.new(0.85, 0, 0, 36)
+NoclipBtn.Position = UDim2.new(0.075, 0, 0, 90)
+NoclipBtn.BackgroundColor3 = Color3.fromRGB(192, 57, 43)
+NoclipBtn.Text = "🧱 اختراق الجدران: متوقف"
+NoclipBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoclipBtn.TextSize = 15
+NoclipBtn.Font = Enum.Font.SourceSansBold
+NoclipBtn.Parent = MainFrame
+
+local NoclipCorner = Instance.new("UICorner")
+NoclipCorner.CornerRadius = UDim.new(0, 8)
+NoclipCorner.Parent = NoclipBtn
+
 -- !نص عرض السرعة
 local SpeedLabel = Instance.new("TextLabel")
 SpeedLabel.Name = "SpeedLabel"
-SpeedLabel.Size = UDim2.new(1, 0, 0, 30)
-SpeedLabel.Position = UDim2.new(0, 0, 0.46, 0)
+SpeedLabel.Size = UDim2.new(1, 0, 0, 25)
+SpeedLabel.Position = UDim2.new(0, 0, 0, 132)
 SpeedLabel.BackgroundTransparency = 1
 SpeedLabel.Text = "السرعة: " .. tostring(flySpeed)
 SpeedLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
-SpeedLabel.TextSize = 16
+SpeedLabel.TextSize = 15
 SpeedLabel.Font = Enum.Font.SourceSansBold
 SpeedLabel.Parent = MainFrame
 
---! زرار أسم زيادة السرعة ▲
+--! زرار زيادة السرعة ▲
 local UpBtn = Instance.new("TextButton")
 UpBtn.Name = "UpBtn"
 UpBtn.Size = UDim2.new(0.38, 0, 0, 35)
-UpBtn.Position = UDim2.new(0.075, 0, 0.65, 0)
+UpBtn.Position = UDim2.new(0.075, 0, 0, 162)
 UpBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
 UpBtn.Text = "▲ زيادة"
 UpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-UpBtn.TextSize = 16
+UpBtn.TextSize = 15
 UpBtn.Font = Enum.Font.SourceSansBold
 UpBtn.Parent = MainFrame
 
@@ -112,15 +129,15 @@ local UpCorner = Instance.new("UICorner")
 UpCorner.CornerRadius = UDim.new(0, 8)
 UpCorner.Parent = UpBtn
 
---* زرار أسم تقليل السرعة ▼
+--* زرار تقليل السرعة ▼
 local DownBtn = Instance.new("TextButton")
 DownBtn.Name = "DownBtn"
 DownBtn.Size = UDim2.new(0.38, 0, 0, 35)
-DownBtn.Position = UDim2.new(0.545, 0, 0.65, 0)
+DownBtn.Position = UDim2.new(0.545, 0, 0, 162)
 DownBtn.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
 DownBtn.Text = "▼ تقليل"
 DownBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-DownBtn.TextSize = 16
+DownBtn.TextSize = 15
 DownBtn.Font = Enum.Font.SourceSansBold
 DownBtn.Parent = MainFrame
 
@@ -131,16 +148,16 @@ DownCorner.Parent = DownBtn
 -- * نص حقوق السكربت السفلي
 local Footer = Instance.new("TextLabel")
 Footer.Size = UDim2.new(1, 0, 0, 20)
-Footer.Position = UDim2.new(0, 0, 0.88, 0)
+Footer.Position = UDim2.new(0, 0, 0, 205)
 Footer.BackgroundTransparency = 1
-Footer.Text = "🥔 Potato Fly v1.0"
+Footer.Text = "🥔 Potato Fly v2.0"
 Footer.TextColor3 = Color3.fromRGB(150, 150, 150)
 Footer.TextSize = 11
 Footer.Font = Enum.Font.SourceSansItalic
 Footer.Parent = MainFrame
 
 -- ============================================
---! منطق ووظائف الطيران
+--! منطق ووظائف الطيران واختراق الجدران
 -- ============================================
 
 local function updateSpeedUI()
@@ -196,7 +213,7 @@ local function startFly()
         local camera = workspace.CurrentCamera
         local moveDir = Vector3.zero
 
-        -- *   / WASD
+        -- * / WASD
         if UserInputService:IsKeyDown(Enum.KeyCode.W) then
             moveDir = moveDir + camera.CFrame.LookVector
         end
@@ -209,7 +226,7 @@ local function startFly()
         if UserInputService:IsKeyDown(Enum.KeyCode.D) then
             moveDir = moveDir + camera.CFrame.RightVector
         end
-         -- * شويه حنكات شيفت وسبيس
+        -- * شيفت وسبيس
         if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
             moveDir = moveDir + Vector3.new(0, 1, 0)
         end
@@ -226,16 +243,57 @@ local function startFly()
     end)
 end
 
+-- * منطق تشغيل/إيقاف اختراق الجدران (Noclip)
+local function stopNoclip()
+    noclip = false
+    NoclipBtn.Text = "🧱 اختراق الجدران: متوقف"
+    NoclipBtn.BackgroundColor3 = Color3.fromRGB(192, 57, 43)
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+end
+
+local function startNoclip()
+    noclip = true
+    NoclipBtn.Text = "🟢 اختراق الجدران: مفعل"
+    NoclipBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+
+    noclipConnection = RunService.Stepped:Connect(function()
+        if not noclip then
+            stopNoclip()
+            return
+        end
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
 -- ============================================
 --* ربط الأحداث والأزرار
 -- ============================================
 
---* زر التشغيل والإيقاف
+--* زر الطيران
 ToggleBtn.MouseButton1Click:Connect(function()
     if flying then
         stopFly()
     else
         startFly()
+    end
+end)
+
+--* زر اختراق الجدران
+NoclipBtn.MouseButton1Click:Connect(function()
+    if noclip then
+        stopNoclip()
+    else
+        startNoclip()
     end
 end)
 
@@ -254,7 +312,7 @@ DownBtn.MouseButton1Click:Connect(function()
     end
 end)
 
---* تغيير السرعة كمان بأسهم الكيبورد (Up / Down Arrows)
+--* تغيير السرعة بأسهم الكيبورد (Up / Down Arrows)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.Up then
@@ -270,9 +328,12 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- * تشغيل الطيران بعد الموت
+-- * إلغاء التفعيل عند الموت/إعادة الرسبون
 LocalPlayer.CharacterAdded:Connect(function()
     if flying then
         stopFly()
+    end
+    if noclip then
+        stopNoclip()
     end
 end)
